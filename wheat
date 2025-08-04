@@ -1,0 +1,128 @@
+--[[
+    ✔ Wheat ve Ore için Highlight ESP
+    ✔ Otomatik yenileme
+    ✔ Aç/Kapa GUI
+    ✔ GUI kapatma
+--]]
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local wheatFolder = workspace:WaitForChild("ProducedResources"):WaitForChild("Wheat")
+local oreFolder = workspace:WaitForChild("ProducedResources"):WaitForChild("Ore")
+
+--#region GUI Oluştur
+local ScreenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+ScreenGui.Name = "ESPController"
+ScreenGui.ResetOnSpawn = false
+
+local mainFrame = Instance.new("Frame", ScreenGui)
+mainFrame.Size = UDim2.new(0, 180, 0, 100)
+mainFrame.Position = UDim2.new(0, 10, 0.3, 0)
+mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+mainFrame.BorderSizePixel = 0
+mainFrame.Visible = true
+
+local uiCorner = Instance.new("UICorner", mainFrame)
+uiCorner.CornerRadius = UDim.new(0, 10)
+
+local wheatButton = Instance.new("TextButton", mainFrame)
+wheatButton.Text = "Toggle Wheat ESP"
+wheatButton.Size = UDim2.new(1, -10, 0, 30)
+wheatButton.Position = UDim2.new(0, 5, 0, 5)
+wheatButton.BackgroundColor3 = Color3.fromRGB(255, 216, 0)
+Instance.new("UICorner", wheatButton)
+
+local oreButton = Instance.new("TextButton", mainFrame)
+oreButton.Text = "Toggle Ore ESP"
+oreButton.Size = UDim2.new(1, -10, 0, 30)
+oreButton.Position = UDim2.new(0, 5, 0, 40)
+oreButton.BackgroundColor3 = Color3.fromRGB(102, 204, 255)
+Instance.new("UICorner", oreButton)
+
+local closeButton = Instance.new("TextButton", mainFrame)
+closeButton.Text = "X"
+closeButton.Size = UDim2.new(0, 25, 0, 25)
+closeButton.Position = UDim2.new(1, -30, 0, 5)
+closeButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+Instance.new("UICorner", closeButton)
+--#endregion
+
+--#region ESP Fonksiyonları
+local wheatEnabled = true
+local oreEnabled = true
+
+local function addHighlight(target, fillColor)
+    if target:IsA("Model") and target:FindFirstChild("PrimaryPart") then
+        if not target:FindFirstChild("Highlight") then
+            local hl = Instance.new("Highlight")
+            hl.FillColor = fillColor
+            hl.OutlineColor = Color3.new(1, 1, 1)
+            hl.FillTransparency = 0.3
+            hl.OutlineTransparency = 0
+            hl.Adornee = target
+            hl.Parent = target
+        end
+    elseif target:IsA("BasePart") then
+        if not target:FindFirstChild("Highlight") then
+            local hl = Instance.new("Highlight")
+            hl.FillColor = fillColor
+            hl.OutlineColor = Color3.new(1, 1, 1)
+            hl.FillTransparency = 0.3
+            hl.OutlineTransparency = 0
+            hl.Adornee = target
+            hl.Parent = target
+        end
+    end
+end
+
+local function updateFolderESP(folder, fillColor, enabled)
+    for _, obj in pairs(folder:GetChildren()) do
+        if enabled then
+            addHighlight(obj, fillColor)
+        else
+            local hl = obj:FindFirstChild("Highlight")
+            if hl then hl:Destroy() end
+        end
+    end
+end
+
+--#endregion
+
+--#region Otomatik Güncelleme
+wheatFolder.ChildAdded:Connect(function(child)
+    task.wait(0.1)
+    if wheatEnabled then
+        addHighlight(child, Color3.fromRGB(255, 216, 0))
+    end
+end)
+
+oreFolder.ChildAdded:Connect(function(child)
+    task.wait(0.1)
+    if oreEnabled then
+        addHighlight(child, Color3.fromRGB(102, 204, 255))
+    end
+end)
+--#endregion
+
+--#region Butonlar
+wheatButton.MouseButton1Click:Connect(function()
+    wheatEnabled = not wheatEnabled
+    updateFolderESP(wheatFolder, Color3.fromRGB(255, 216, 0), wheatEnabled)
+    wheatButton.Text = wheatEnabled and "Wheat ESP: ON" or "Wheat ESP: OFF"
+end)
+
+oreButton.MouseButton1Click:Connect(function()
+    oreEnabled = not oreEnabled
+    updateFolderESP(oreFolder, Color3.fromRGB(102, 204, 255), oreEnabled)
+    oreButton.Text = oreEnabled and "Ore ESP: ON" or "Ore ESP: OFF"
+end)
+
+closeButton.MouseButton1Click:Connect(function()
+    mainFrame.Visible = false
+end)
+--#endregion
+
+--#region Başlangıç ESP'leri uygula
+updateFolderESP(wheatFolder, Color3.fromRGB(255, 216, 0), wheatEnabled)
+updateFolderESP(oreFolder, Color3.fromRGB(102, 204, 255), oreEnabled)
+--#endregion
